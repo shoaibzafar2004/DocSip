@@ -26,9 +26,10 @@ export default function AuthCardLayout({
                     href={home()}
                     className="flex items-center gap-2 self-center font-medium"
                 >
-                    <div className="flex h-9 w-9 items-center justify-center">
-                        <AppLogoIcon className="size-9 fill-current text-black dark:text-white" />
+                    <div className="flex size-9 items-center justify-center">
+                        <AppLogoIcon className="size-9 text-primary" strokeWidth={2} />
                     </div>
+                    <span className="text-base font-semibold tracking-tight">DocSip</span>
                 </Link>
 
                 <div className="flex flex-col gap-6">

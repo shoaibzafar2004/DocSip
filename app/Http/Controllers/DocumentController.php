@@ -2,12 +2,13 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\StoreDocumentRequest;
 use App\Models\Document;
+use App\Jobs\ProcessDocumentJob;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Storage;
+use App\Http\Requests\StoreDocumentRequest;
 
 class DocumentController extends Controller
 {
@@ -23,6 +24,8 @@ class DocumentController extends Controller
             'mime_type' => $file->getMimeType(),
             'status' => 'uploaded',
         ]);
+
+        ProcessDocumentJob::dispatch($document);
 
         return response()->json([
             'id' => $document->id,

@@ -1,4 +1,4 @@
-import { Head } from '@inertiajs/react';
+import { Head, usePoll } from '@inertiajs/react';
 import { DocumentList } from '@/components/document/list';
 import { DocumentStats } from '@/components/document/stats';
 import { DocumentUploadZone } from '@/components/document/upload-zone';
@@ -19,6 +19,12 @@ export default function Dashboard({
     documents = [],
     stats = { total: 0, ready: 0, processing: 0, uploaded: 0 },
 }: DashboardProps) {
+    const hasPending = documents.some(
+        (doc) => doc.status === 'uploaded' || doc.status === 'processing',
+    );
+
+    usePoll(3000, { only: ['documents', 'stats'] }, { autoStart: hasPending });
+
     return (
         <>
             <Head title="Dashboard" />

@@ -6,6 +6,7 @@ use App\Models\Document;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
@@ -15,6 +16,7 @@ class DocumentUploadTest extends TestCase
 
     public function test_authenticated_user_can_upload_a_document(): void
     {
+        Queue::fake();
         Storage::fake('local');
 
         $user = User::factory()->create();

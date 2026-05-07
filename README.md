@@ -135,7 +135,7 @@ Run tests matching a name:
 **PHP formatting** (Laravel Pint):
 
 ```bash
-./vendor/bin/pint
+./vendor/bin/sail php vendor/bin/pint
 ```
 
 **TypeScript type checking:**
@@ -160,13 +160,14 @@ npm run format:check
 
 ```
 app/
-├── Actions/          # Single-purpose action classes (Fortify auth actions)
+├── Actions/          # Single-purpose action classes
 ├── Concerns/         # Shared traits (password/profile validation rules)
 ├── Http/
 │   ├── Controllers/  # Request handlers
 │   ├── Middleware/   # HTTP middleware
 │   └── Requests/     # Form request validation
 ├── Models/           # Eloquent models
+├── Services/         # Business logic services
 └── Providers/        # Service providers
 
 resources/js/

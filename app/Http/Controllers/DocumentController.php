@@ -2,30 +2,24 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Document;
-use App\Jobs\ProcessDocumentJob;
-use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\Gate;
-use Illuminate\Http\RedirectResponse;
-use Illuminate\Support\Facades\Storage;
+use App\Actions\DeleteDocumentAction;
+use App\Actions\UploadDocumentAction;
 use App\Http\Requests\StoreDocumentRequest;
+use App\Models\Document;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 
 class DocumentController extends Controller
 {
+    public function __construct(
+        protected UploadDocumentAction $uploadDocument,
+        protected DeleteDocumentAction $deleteDocument,
+    ) {}
+
     public function store(StoreDocumentRequest $request): JsonResponse
     {
-        $file = $request->file('file');
-        $path = $file->store('documents', 'local');
 
-        $document = $request->user()->documents()->create([
-            'name' => $file->getClientOriginalName(),
-            'path' => $path,
-            'size' => $file->getSize(),
-            'mime_type' => $file->getMimeType(),
-            'status' => 'uploaded',
-        ]);
-
-        ProcessDocumentJob::dispatch($document);
+        $document = $this->uploadDocument->handle($request->user(), $request->file('file'));
 
         return response()->json([
             'id' => $document->id,
@@ -37,10 +31,7 @@ class DocumentController extends Controller
 
     public function destroy(Document $document): RedirectResponse
     {
-        Gate::authorize('delete', $document);
-
-        Storage::disk('local')->delete($document->path);
-        $document->delete();
+        $this->deleteDocument->handle($document);
 
         return back();
     }

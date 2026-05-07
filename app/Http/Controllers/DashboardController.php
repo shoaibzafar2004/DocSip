@@ -2,24 +2,20 @@
 
 namespace App\Http\Controllers;
 
+use App\Services\DocumentService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class DashboardController extends Controller
 {
+    public function __construct(
+        protected DocumentService $documentService,
+    ) {}
+
     public function index(Request $request): Response
     {
-        $documents = $request->user()
-            ->documents()
-            ->latest()
-            ->get()
-            ->map(fn ($doc) => [
-                'id' => $doc->id,
-                'name' => $doc->name,
-                'status' => $doc->status,
-                'createdAt' => $doc->created_at->diffForHumans(),
-            ]);
+        $documents = $this->documentService->getForDashboard($request->user());
 
         $stats = [
             'total' => $documents->count(),

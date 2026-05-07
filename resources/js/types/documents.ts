@@ -4,3 +4,11 @@ export interface Document {
     status: 'uploaded' | 'processing' | 'ready';
     createdAt: string;
 }
+
+export interface UploadItem {
+    id: string;
+    name: string;
+    progress: number;
+    status: 'uploading' | 'success' | 'error';
+    errorMessage?: string;
+}

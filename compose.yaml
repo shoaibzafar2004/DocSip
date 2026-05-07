@@ -25,7 +25,7 @@ services:
             - pgsql
             - redis
     pgsql:
-        image: 'postgres:18-alpine'
+        image: 'pgvector/pgvector:pg18-trixie'
         ports:
             - '${FORWARD_DB_PORT:-5432}:5432'
         environment:

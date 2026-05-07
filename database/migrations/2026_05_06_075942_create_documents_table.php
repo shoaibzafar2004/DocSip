@@ -18,7 +18,7 @@ return new class extends Migration
             $table->string('path');
             $table->unsignedBigInteger('size');
             $table->string('mime_type');
-            $table->enum('status', ['uploaded', 'processing', 'ready'])->default('uploaded');
+            $table->enum('status', ['uploaded', 'processing', 'ready', 'failed'])->default('uploaded');
             $table->timestamps();
         });
     }

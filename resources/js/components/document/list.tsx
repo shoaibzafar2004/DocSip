@@ -1,0 +1,97 @@
+import { router } from '@inertiajs/react';
+import { FileText, Trash2 } from 'lucide-react';
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { destroy } from '@/routes/documents';
+import type { Document } from '@/types';
+
+interface DocumentListProps {
+    documents: Document[];
+}
+
+export function DocumentList({ documents }: DocumentListProps) {
+    if (documents.length === 0) {
+        return (
+            <div className="flex min-h-64 flex-1 flex-col items-center justify-center gap-3 rounded-xl border border-sidebar-border/70 dark:border-sidebar-border">
+                <FileText className="h-10 w-10 text-muted-foreground/40" />
+                <p className="text-sm text-muted-foreground">
+                    No documents yet. Upload one to get started.
+                </p>
+            </div>
+        );
+    }
+
+    return (
+        <div className="flex flex-col gap-2 rounded-xl border border-sidebar-border/70 p-4 dark:border-sidebar-border">
+            {documents.map((doc) => (
+                <div
+                    key={doc.id}
+                    className="flex items-center justify-between rounded-lg px-3 py-2.5 hover:bg-accent"
+                >
+                    <div className="flex items-center gap-3">
+                        <FileText className="h-4 w-4 shrink-0 text-muted-foreground" />
+                        <span className="text-sm font-medium">{doc.name}</span>
+                    </div>
+                    <div className="flex items-center gap-4">
+                        <span className="text-xs text-muted-foreground">
+                            {doc.createdAt}
+                        </span>
+                        <Badge
+                            variant={
+                                doc.status === 'ready' ? 'default' : 'secondary'
+                            }
+                        >
+                            {doc.status === 'ready'
+                                ? 'Ready'
+                                : doc.status === 'processing'
+                                  ? 'Processing'
+                                  : 'Uploaded'}
+                        </Badge>
+                        <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                                <Button variant="outline" size="icon">
+                                    <Trash2 className="h-4 w-4" />
+                                </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                                <AlertDialogHeader>
+                                    <AlertDialogTitle>
+                                        Delete document
+                                    </AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                        Are you sure you want to delete{' '}
+                                        <span className="font-medium text-foreground">
+                                            {doc.name}
+                                        </span>
+                                        ? This action cannot be undone.
+                                    </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                    <AlertDialogAction
+                                        onClick={() =>
+                                            router.delete(destroy(doc.id))
+                                        }
+                                    >
+                                        Delete
+                                    </AlertDialogAction>
+                                </AlertDialogFooter>
+                            </AlertDialogContent>
+                        </AlertDialog>
+                    </div>
+                </div>
+            ))}
+        </div>
+    );
+}

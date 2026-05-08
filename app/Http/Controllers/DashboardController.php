@@ -22,6 +22,7 @@ class DashboardController extends Controller
             'ready' => $documents->where('status', 'ready')->count(),
             'processing' => $documents->where('status', 'processing')->count(),
             'uploaded' => $documents->where('status', 'uploaded')->count(),
+            'failed' => $documents->where('status', 'failed')->count(),
         ];
 
         return Inertia::render('dashboard', [

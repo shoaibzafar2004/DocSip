@@ -44,20 +44,34 @@ export function DocumentList({ documents }: DocumentListProps) {
                         <span className="text-sm font-medium">{doc.name}</span>
                     </div>
                     <div className="flex items-center gap-4">
+                        {doc.statusMessage && (
+                            <span
+                                className={`text-xs ${doc.status === 'failed' ? 'text-destructive' : 'text-muted-foreground'}`}
+                            >
+                                {doc.statusMessage}
+                            </span>
+                        )}
                         <span className="text-xs text-muted-foreground">
                             {doc.createdAt}
                         </span>
                         <Badge
                             variant={
-                                doc.status === 'ready' ? 'default' : 'secondary'
+                                doc.status === 'ready'
+                                    ? 'default'
+                                    : doc.status === 'failed'
+                                      ? 'destructive'
+                                      : 'secondary'
                             }
                         >
                             {doc.status === 'ready'
                                 ? 'Ready'
                                 : doc.status === 'processing'
                                   ? 'Processing'
-                                  : 'Uploaded'}
+                                  : doc.status === 'failed'
+                                    ? 'Failed'
+                                    : 'Uploaded'}
                         </Badge>
+
                         <AlertDialog>
                             <AlertDialogTrigger asChild>
                                 <Button variant="outline" size="icon">
@@ -78,7 +92,9 @@ export function DocumentList({ documents }: DocumentListProps) {
                                     </AlertDialogDescription>
                                 </AlertDialogHeader>
                                 <AlertDialogFooter>
-                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                    <AlertDialogCancel>
+                                        Cancel
+                                    </AlertDialogCancel>
                                     <AlertDialogAction
                                         onClick={() =>
                                             router.delete(destroy(doc.id))

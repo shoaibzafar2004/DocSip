@@ -3,29 +3,27 @@
 namespace App\Models;
 
 use Pgvector\Laravel\Vector;
-use Pgvector\Laravel\HasNeighbors;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
-class DocumentChunk extends Model
+class Message extends Model
 {
-    use HasNeighbors;
+    use HasFactory;
 
     protected $fillable = [
-        'document_id',
-        'chunk_index',
+        'conversation_id',
+        'role',
         'content',
         'embedding',
-        'metadata',
     ];
 
     protected $casts = [
         'embedding' => Vector::class,
-        'metadata' => 'array',
     ];
 
-    public function document(): BelongsTo
+    public function conversation(): BelongsTo
     {
-        return $this->belongsTo(Document::class);
+        return $this->belongsTo(Conversation::class);
     }
 }

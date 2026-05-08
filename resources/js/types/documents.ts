@@ -1,7 +1,8 @@
 export interface Document {
     id: number;
     name: string;
-    status: 'uploaded' | 'processing' | 'ready';
+    status: 'uploaded' | 'processing' | 'ready' | 'failed';
+    statusMessage?: string;
     createdAt: string;
 }
 

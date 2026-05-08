@@ -19,7 +19,7 @@ class DocumentServiceTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->service = new DocumentService();
+        $this->service = new DocumentService;
     }
 
     public function test_upload_stores_file_and_creates_document_record(): void
@@ -89,6 +89,7 @@ class DocumentServiceTest extends TestCase
         $this->assertArrayHasKey('id', $documents->first());
         $this->assertArrayHasKey('name', $documents->first());
         $this->assertArrayHasKey('status', $documents->first());
+        $this->assertArrayHasKey('statusMessage', $documents->first());
         $this->assertArrayHasKey('createdAt', $documents->first());
     }
 

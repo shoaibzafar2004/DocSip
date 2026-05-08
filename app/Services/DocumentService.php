@@ -42,6 +42,7 @@ class DocumentService
                 'id' => $document->id,
                 'name' => $document->name,
                 'status' => $document->status,
+                'statusMessage' => $document->status_message,
                 'createdAt' => $document->created_at->diffForHumans(),
             ]);
     }

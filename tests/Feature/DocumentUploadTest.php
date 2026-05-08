@@ -92,6 +92,7 @@ class DocumentUploadTest extends TestCase
         Document::factory()->count(2)->ready()->for($user)->create();
         Document::factory()->count(1)->processing()->for($user)->create();
         Document::factory()->count(1)->uploaded()->for($user)->create();
+        Document::factory()->count(1)->failed()->for($user)->create();
 
         $response = $this->actingAs($user)->get('/dashboard');
 
@@ -99,11 +100,12 @@ class DocumentUploadTest extends TestCase
         $response->assertInertia(
             fn ($page) => $page
                 ->component('dashboard')
-                ->has('documents', 4)
-                ->where('stats.total', 4)
+                ->has('documents', 5)
+                ->where('stats.total', 5)
                 ->where('stats.ready', 2)
                 ->where('stats.processing', 1)
-                ->where('stats.uploaded', 1),
+                ->where('stats.uploaded', 1)
+                ->where('stats.failed', 1),
         );
     }
 

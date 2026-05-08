@@ -47,6 +47,24 @@ class ProcessDocumentJobTest extends TestCase
         $this->assertSame('ready', $document->fresh()->status);
     }
 
+    public function test_job_clears_status_message_on_success(): void
+    {
+        $document = Document::factory()->uploaded()->create([
+            'status_message' => 'Retrying... (attempt 2 of 3)',
+        ]);
+
+        $this->mock(PdfExtractionService::class)
+            ->shouldReceive('extract')
+            ->andReturn(str_repeat('word ', 30));
+
+        $this->mock(DocumentChunkStorageService::class)
+            ->shouldReceive('store');
+
+        app()->call([new ProcessDocumentJob($document), 'handle']);
+
+        $this->assertNull($document->fresh()->status_message);
+    }
+
     public function test_job_sets_status_to_failed_when_extraction_throws(): void
     {
         $document = Document::factory()->uploaded()->create();
@@ -61,6 +79,21 @@ class ProcessDocumentJobTest extends TestCase
         app()->call([new ProcessDocumentJob($document), 'handle']);
 
         $this->assertSame('failed', $document->fresh()->status);
+    }
+
+    public function test_job_sets_status_message_when_extraction_fails(): void
+    {
+        $document = Document::factory()->uploaded()->create();
+
+        $this->mock(PdfExtractionService::class)
+            ->shouldReceive('extract')
+            ->andThrow(new \Exception('pdftotext not found'));
+
+        $this->mock(DocumentChunkStorageService::class);
+
+        app()->call([new ProcessDocumentJob($document), 'handle']);
+
+        $this->assertNotNull($document->fresh()->status_message);
     }
 
     public function test_job_sets_status_to_failed_when_content_is_too_short(): void
@@ -79,7 +112,22 @@ class ProcessDocumentJobTest extends TestCase
         $this->assertSame('failed', $document->fresh()->status);
     }
 
-    public function test_job_sets_status_to_failed_when_chunk_storage_throws(): void
+    public function test_job_sets_status_message_when_content_is_too_short(): void
+    {
+        $document = Document::factory()->uploaded()->create();
+
+        $this->mock(PdfExtractionService::class)
+            ->shouldReceive('extract')
+            ->andReturn('too short');
+
+        $this->mock(DocumentChunkStorageService::class);
+
+        app()->call([new ProcessDocumentJob($document), 'handle']);
+
+        $this->assertNotNull($document->fresh()->status_message);
+    }
+
+    public function test_job_propagates_exception_when_chunk_storage_throws(): void
     {
         $document = Document::factory()->uploaded()->create();
 
@@ -89,11 +137,37 @@ class ProcessDocumentJobTest extends TestCase
 
         $this->mock(DocumentChunkStorageService::class)
             ->shouldReceive('store')
-            ->andThrow(new \Exception('DB error'));
+            ->andThrow(new \Exception('Rate limit exceeded'));
+
+        $this->expectException(\Exception::class);
 
         app()->call([new ProcessDocumentJob($document), 'handle']);
+    }
+
+    public function test_failed_method_sets_status_to_failed_with_message(): void
+    {
+        $document = Document::factory()->processing()->create();
+        $job = new ProcessDocumentJob($document);
+
+        $job->failed(new \Exception('Rate limit exceeded'));
 
         $this->assertSame('failed', $document->fresh()->status);
+        $this->assertNotNull($document->fresh()->status_message);
+    }
+
+    public function test_failed_method_does_not_overwrite_existing_failure_message(): void
+    {
+        $document = Document::factory()->failed()->create([
+            'status_message' => 'Could not read this PDF. Remove it and try a different file.',
+        ]);
+        $job = new ProcessDocumentJob($document);
+
+        $job->failed(new \Exception('Some error'));
+
+        $this->assertSame(
+            'Could not read this PDF. Remove it and try a different file.',
+            $document->fresh()->status_message,
+        );
     }
 
     public function test_job_logs_error_when_extraction_fails(): void

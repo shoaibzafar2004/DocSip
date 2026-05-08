@@ -1,16 +1,18 @@
-import { FileText, CheckCircle, Loader2, CheckCheck } from 'lucide-react';
+import { FileText, CheckCircle, Loader2, CheckCheck, Ban } from 'lucide-react';
 
 interface DocumentStatsProps {
     total: number;
     ready: number;
     processing: number;
     uploaded: number;
+    failed: number;
 }
 
 const stats = [
     { label: 'Total Documents', key: 'total' as const, icon: FileText },
     { label: 'Uploaded', key: 'uploaded' as const, icon: CheckCheck },
     { label: 'Processing', key: 'processing' as const, icon: Loader2 },
+    { label: 'Failed', key: 'failed' as const, icon: Ban },
     { label: 'Ready to Chat', key: 'ready' as const, icon: CheckCircle },
 ];
 
@@ -19,11 +21,12 @@ export function DocumentStats({
     ready,
     processing,
     uploaded,
+    failed,
 }: DocumentStatsProps) {
-    const values = { total, ready, processing, uploaded };
+    const values = { total, ready, processing, uploaded, failed };
 
     return (
-        <div className="grid auto-rows-min gap-4 md:grid-cols-4">
+        <div className="grid auto-rows-min gap-4 md:grid-cols-5">
             {stats.map(({ label, key, icon: Icon }) => (
                 <div
                     key={key}

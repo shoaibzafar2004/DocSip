@@ -27,7 +27,7 @@ class DocumentChunkStorageServiceTest extends TestCase
 
         $this->mock(EmbeddingService::class)
             ->shouldReceive('embedMany')
-            ->andReturnUsing(fn (array $texts) => array_fill(0, count($texts), array_fill(0, 1536, 0.1)));
+            ->andReturnUsing(fn (array $texts) => array_fill(0, count($texts), array_fill(0, 768, 0.1)));
     }
 
     public function test_store_creates_chunks_for_document(): void
@@ -95,7 +95,7 @@ class DocumentChunkStorageServiceTest extends TestCase
         $this->mock(EmbeddingService::class)
             ->shouldReceive('embedMany')
             ->once()
-            ->andReturnUsing(fn (array $texts) => array_fill(0, count($texts), array_fill(0, 1536, 0.1)));
+            ->andReturnUsing(fn (array $texts) => array_fill(0, count($texts), array_fill(0, 768, 0.1)));
 
         $this->makeService()->store($document, str_repeat('word ', 300));
     }

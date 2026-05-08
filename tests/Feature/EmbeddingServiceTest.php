@@ -3,23 +3,19 @@
 namespace Tests\Feature;
 
 use App\Services\EmbeddingService;
-use OpenAI\Laravel\Facades\OpenAI;
-use OpenAI\Resources\Embeddings;
-use OpenAI\Responses\Embeddings\CreateResponse;
+use Illuminate\Http\Client\Request;
+use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
 
 class EmbeddingServiceTest extends TestCase
 {
     public function test_embed_many_returns_array_of_vectors(): void
     {
-        $fakeEmbedding = array_fill(0, 1536, 0.1);
+        $fakeEmbedding = array_fill(0, 768, 0.1);
 
-        OpenAI::fake([
-            CreateResponse::fake([
-                'data' => [
-                    ['embedding' => $fakeEmbedding, 'index' => 0, 'object' => 'embedding'],
-                    ['embedding' => $fakeEmbedding, 'index' => 1, 'object' => 'embedding'],
-                ],
+        Http::fake([
+            '*/api/embed' => Http::response([
+                'embeddings' => [$fakeEmbedding, $fakeEmbedding],
             ]),
         ]);
 
@@ -27,45 +23,50 @@ class EmbeddingServiceTest extends TestCase
 
         $this->assertIsArray($result);
         $this->assertCount(2, $result);
-        $this->assertCount(1536, $result[0]);
-        $this->assertCount(1536, $result[1]);
+        $this->assertCount(768, $result[0]);
+        $this->assertCount(768, $result[1]);
     }
 
-    public function test_embed_many_uses_correct_model_and_sends_array_input(): void
+    public function test_embed_many_sends_correct_model_and_input(): void
     {
-        OpenAI::fake([
-            CreateResponse::fake([
-                'data' => [
-                    ['embedding' => array_fill(0, 1536, 0.0), 'index' => 0, 'object' => 'embedding'],
-                ],
+        Http::fake([
+            '*/api/embed' => Http::response([
+                'embeddings' => [array_fill(0, 768, 0.0)],
             ]),
         ]);
 
         (new EmbeddingService)->embedMany(['test input']);
 
-        OpenAI::assertSent(Embeddings::class, function (string $method, array $parameters): bool {
-            return $method === 'create'
-                && $parameters['model'] === 'text-embedding-3-small'
-                && $parameters['input'] === ['test input'];
+        Http::assertSent(function (Request $request): bool {
+            return str_contains($request->url(), '/api/embed')
+                && $request->data()['model'] === 'nomic-embed-text'
+                && $request->data()['input'] === ['test input'];
         });
     }
 
     public function test_embed_many_returns_one_vector_per_input(): void
     {
         $texts = ['chunk one', 'chunk two', 'chunk three'];
-        $fakeEmbedding = array_fill(0, 1536, 0.0);
 
-        OpenAI::fake([
-            CreateResponse::fake([
-                'data' => array_map(
-                    fn (int $i) => ['embedding' => $fakeEmbedding, 'index' => $i, 'object' => 'embedding'],
-                    array_keys($texts),
-                ),
+        Http::fake([
+            '*/api/embed' => Http::response([
+                'embeddings' => array_fill(0, count($texts), array_fill(0, 768, 0.0)),
             ]),
         ]);
 
         $result = (new EmbeddingService)->embedMany($texts);
 
         $this->assertCount(count($texts), $result);
+    }
+
+    public function test_embed_many_throws_on_failed_response(): void
+    {
+        Http::fake([
+            '*/api/embed' => Http::response('Service Unavailable', 503),
+        ]);
+
+        $this->expectException(\RuntimeException::class);
+
+        (new EmbeddingService)->embedMany(['test']);
     }
 }

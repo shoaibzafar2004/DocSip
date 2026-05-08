@@ -12,12 +12,13 @@ interface DashboardProps {
         ready: number;
         processing: number;
         uploaded: number;
+        failed: number;
     };
 }
 
 export default function Dashboard({
     documents = [],
-    stats = { total: 0, ready: 0, processing: 0, uploaded: 0 },
+    stats = { total: 0, ready: 0, processing: 0, uploaded: 0, failed: 0 },
 }: DashboardProps) {
     const hasPending = documents.some(
         (doc) => doc.status === 'uploaded' || doc.status === 'processing',
@@ -35,6 +36,7 @@ export default function Dashboard({
                     ready={stats.ready}
                     processing={stats.processing}
                     uploaded={stats.uploaded}
+                    failed={stats.failed}
                 />
                 <DocumentList documents={documents} />
             </div>

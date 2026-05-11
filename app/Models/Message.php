@@ -2,10 +2,10 @@
 
 namespace App\Models;
 
-use Pgvector\Laravel\Vector;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Pgvector\Laravel\Vector;
 
 class Message extends Model
 {

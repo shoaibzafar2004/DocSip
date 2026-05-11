@@ -46,4 +46,12 @@ class DocumentService
                 'createdAt' => $document->created_at->diffForHumans(),
             ]);
     }
+
+    public function getReadyDocuments(): Collection
+    {
+        return auth()->user()
+            ->documents()
+            ->where('status', 'ready')
+            ->get(['id', 'name']);
+    }
 }

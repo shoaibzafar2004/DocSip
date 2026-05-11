@@ -22,6 +22,8 @@ class DocumentChunk extends Model
         'metadata',
     ];
 
+    protected $hidden = ['embedding'];
+
     protected $casts = [
         'embedding' => Vector::class,
         'metadata' => 'array',

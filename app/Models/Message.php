@@ -18,6 +18,8 @@ class Message extends Model
         'embedding',
     ];
 
+    protected $hidden = ['embedding'];
+
     protected $casts = [
         'embedding' => Vector::class,
     ];

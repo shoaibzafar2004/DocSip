@@ -29,6 +29,6 @@ class AnswerService
 
     protected function callGemini(string $prompt): string
     {
-        return Gemini::geminiFlash()->generateContent($prompt)->text();
+        return Gemini::generativeModel(model: 'models/gemini-2.5-flash')->generateContent($prompt)->text();
     }
 }

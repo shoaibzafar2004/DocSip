@@ -26,6 +26,12 @@ class MessageController extends Controller
             'role' => 'user',
             'embedding' => $embedding[0],
         ]);
+
+        if ($conversation->messages()->count() > 1 && !$conversation->title) {
+            $title = $this->titleService->generate($message->content);
+            $conversation->update(['title' => $title]);
+        }
+
         $context = $this->documentQueryService->query($message);
 
         $answer = $this->answerService->answer($message, $context);

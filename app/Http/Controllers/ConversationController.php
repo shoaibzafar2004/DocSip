@@ -9,12 +9,14 @@ use App\Services\ConversationService;
 use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
 use Inertia\Response;
+use App\Services\DocumentService;
 
 class ConversationController extends Controller
 {
     public function __construct(
         protected CreateConversationAction $createConversation,
-        protected ConversationService $conversationService
+        protected ConversationService $conversationService,
+        protected DocumentService $documentService
     ) {}
 
     public function index(): Response
@@ -23,6 +25,7 @@ class ConversationController extends Controller
 
         return Inertia::render('chat', [
             'conversations' => $this->conversationService->getForSidebar($user),
+            'readyDocuments' => $this->documentService->getReadyDocuments(),
         ]);
     }
 
@@ -53,6 +56,7 @@ class ConversationController extends Controller
             'conversation' => $conversation,
             'messages' => $conversation->messages,
             'attachedDocuments' => $conversation->documents,
+            'readyDocuments' => $this->documentService->getReadyDocuments(),
         ]);
     }
 }

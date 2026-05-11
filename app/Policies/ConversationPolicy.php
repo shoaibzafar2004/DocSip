@@ -9,6 +9,6 @@ class ConversationPolicy
 {
     public function view(User $user, Conversation $conversation): bool
     {
-        return $conversation->users->contains($user->id);
+        return $user->id === $conversation->user_id;
     }
 }

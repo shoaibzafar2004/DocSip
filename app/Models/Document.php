@@ -33,4 +33,9 @@ class Document extends Model
     {
         return $this->hasMany(DocumentChunk::class);
     }
+
+    public function conversations(): BelongsToMany
+    {
+        return $this->belongsToMany(Conversation::class, 'conversation_document');
+    }
 }

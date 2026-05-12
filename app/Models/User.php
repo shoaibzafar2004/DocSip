@@ -37,4 +37,9 @@ class User extends Authenticatable
     {
         return $this->hasMany(Document::class);
     }
+
+    public function conversations(): HasMany
+    {
+        return $this->hasMany(Conversation::class);
+    }
 }

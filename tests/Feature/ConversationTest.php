@@ -128,4 +128,37 @@ class ConversationTest extends TestCase
             ->has('attachedDocuments', 1)
         );
     }
+
+    public function test_user_can_delete_their_own_conversation(): void
+    {
+        $user = User::factory()->create();
+        $conversation = Conversation::factory()->for($user)->create();
+
+        $response = $this->actingAs($user)->delete(route('conversations.destroy', $conversation));
+
+        $response->assertRedirect(route('conversations'));
+        $this->assertModelMissing($conversation);
+    }
+
+    public function test_user_cannot_delete_another_users_conversation(): void
+    {
+        $owner = User::factory()->create();
+        $other = User::factory()->create();
+        $conversation = Conversation::factory()->for($owner)->create();
+
+        $response = $this->actingAs($other)->delete(route('conversations.destroy', $conversation));
+
+        $response->assertForbidden();
+        $this->assertModelExists($conversation);
+    }
+
+    public function test_unauthenticated_user_cannot_delete_a_conversation(): void
+    {
+        $conversation = Conversation::factory()->create();
+
+        $response = $this->delete(route('conversations.destroy', $conversation));
+
+        $response->assertRedirect();
+        $this->assertModelExists($conversation);
+    }
 }

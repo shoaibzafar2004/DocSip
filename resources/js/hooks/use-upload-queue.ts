@@ -1,6 +1,7 @@
 import { router } from '@inertiajs/react';
 import { useState } from 'react';
-import DocumentController from '@/actions/App/Http/Controllers/DocumentController';
+import { getCsrfToken } from '@/lib/api';
+import { store } from '@/routes/documents';
 import type { UploadItem } from '@/types/documents';
 
 function parseErrorMessage(responseText: string): string {
@@ -42,19 +43,13 @@ function uploadFile(
         }
     });
 
-    xhr.addEventListener('error', () => onError('Upload failed. Please try again.'));
-
-    xhr.open('POST', DocumentController.store.url());
-    xhr.setRequestHeader('Accept', 'application/json');
-    xhr.setRequestHeader(
-        'X-XSRF-TOKEN',
-        decodeURIComponent(
-            document.cookie
-                .split('; ')
-                .find((row) => row.startsWith('XSRF-TOKEN='))
-                ?.split('=')[1] ?? '',
-        ),
+    xhr.addEventListener('error', () =>
+        onError('Upload failed. Please try again.'),
     );
+
+    xhr.open('POST', store.url());
+    xhr.setRequestHeader('Accept', 'application/json');
+    xhr.setRequestHeader('X-XSRF-TOKEN', getCsrfToken());
     xhr.send(formData);
 }
 
@@ -62,7 +57,9 @@ export function useUploadQueue(onUploadComplete?: () => void) {
     const [uploads, setUploads] = useState<UploadItem[]>([]);
 
     const updateUpload = (id: string, patch: Partial<UploadItem>) => {
-        setUploads((prev) => prev.map((u) => (u.id === id ? { ...u, ...patch } : u)));
+        setUploads((prev) =>
+            prev.map((u) => (u.id === id ? { ...u, ...patch } : u)),
+        );
     };
 
     const dismiss = (id: string) => {
@@ -98,7 +95,11 @@ export function useUploadQueue(onUploadComplete?: () => void) {
 
                     setTimeout(() => dismiss(item.id), 2000);
                 },
-                (message) => updateUpload(item.id, { status: 'error', errorMessage: message }),
+                (message) =>
+                    updateUpload(item.id, {
+                        status: 'error',
+                        errorMessage: message,
+                    }),
             );
         });
     };

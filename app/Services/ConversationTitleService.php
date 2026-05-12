@@ -2,6 +2,8 @@
 
 namespace App\Services;
 
+use Gemini\Laravel\Facades\Gemini;
+
 class ConversationTitleService
 {
     public function generate(string $firstMessage): string

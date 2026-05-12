@@ -20,6 +20,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/chat', [ConversationController::class, 'store'])->name('conversations.store');
     Route::get('/chat/{conversation}', [ConversationController::class, 'show'])->name('conversations.show');
     Route::post('/chat/{conversation}/messages', [MessageController::class, 'store'])->name('messages.store');
+    Route::delete('/chat/{conversation}', [ConversationController::class, 'destroy'])->name('conversations.destroy');
 });
 
 require __DIR__.'/settings.php';

@@ -6,10 +6,10 @@ use App\Actions\CreateConversationAction;
 use App\Http\Requests\StoreConversationRequest;
 use App\Models\Conversation;
 use App\Services\ConversationService;
+use App\Services\DocumentService;
 use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
 use Inertia\Response;
-use App\Services\DocumentService;
 
 class ConversationController extends Controller
 {
@@ -58,5 +58,13 @@ class ConversationController extends Controller
             'attachedDocuments' => $conversation->documents,
             'readyDocuments' => $this->documentService->getReadyDocuments(),
         ]);
+    }
+
+    public function destroy(Conversation $conversation): RedirectResponse
+    {
+        $this->authorize('delete', $conversation);
+        $conversation->delete();
+
+        return redirect()->route('conversations');
     }
 }

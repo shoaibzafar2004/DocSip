@@ -1,15 +1,21 @@
 import { SendHorizontal } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
+import { apiFetch } from '@/lib/api';
 import { store } from '@/routes/messages';
 import type { Message } from '@/types/conversations';
 
 interface MessageInputProps {
     conversationId: number;
     onMessages: (userMessage: Message, assistantMessage: Message) => void;
+    onTitle?: (title: string) => void;
 }
 
-export default function MessageInput({ conversationId, onMessages }: MessageInputProps) {
+export default function MessageInput({
+    conversationId,
+    onMessages,
+    onTitle,
+}: MessageInputProps) {
     const [content, setContent] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -25,28 +31,21 @@ export default function MessageInput({ conversationId, onMessages }: MessageInpu
         setError(null);
 
         try {
-            const response = await fetch(store(conversationId).url, {
+            const response = await apiFetch(store(conversationId).url, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'X-XSRF-TOKEN': decodeURIComponent(
-                        document.cookie
-                            .split('; ')
-                            .find((c) => c.startsWith('XSRF-TOKEN='))
-                            ?.split('=')[1] ?? '',
-                    ),
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ content }),
             });
 
             if (!response.ok) {
                 setError('Something went wrong. Please try again.');
+
                 return;
             }
 
             const data = await response.json();
             onMessages(data.userMessage, data.assistantMessage);
+            onTitle?.(data.title);
             setContent('');
         } finally {
             setLoading(false);
@@ -70,7 +69,7 @@ export default function MessageInput({ conversationId, onMessages }: MessageInpu
                     placeholder="Ask a question about your documents..."
                     rows={1}
                     disabled={loading}
-                    className="border-input bg-background placeholder:text-muted-foreground focus-visible:ring-ring flex-1 resize-none rounded-md border px-3 py-2 text-sm focus-visible:ring-1 focus-visible:outline-none disabled:opacity-50"
+                    className="flex-1 resize-none rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none disabled:opacity-50"
                     style={{ maxHeight: '8rem', overflowY: 'auto' }}
                     onInput={(e) => {
                         const target = e.target as HTMLTextAreaElement;
@@ -78,16 +77,20 @@ export default function MessageInput({ conversationId, onMessages }: MessageInpu
                         target.style.height = `${target.scrollHeight}px`;
                     }}
                 />
-                <Button type="submit" size="icon" disabled={!content.trim() || loading}>
+                <Button
+                    type="submit"
+                    size="icon"
+                    disabled={!content.trim() || loading}
+                >
                     <SendHorizontal className="h-4 w-4" />
                 </Button>
             </div>
             {loading && (
-                <p className="text-muted-foreground mt-2 text-xs">Thinking...</p>
+                <p className="mt-2 text-xs text-muted-foreground">
+                    Thinking...
+                </p>
             )}
-            {error && (
-                <p className="text-destructive mt-2 text-xs">{error}</p>
-            )}
+            {error && <p className="mt-2 text-xs text-destructive">{error}</p>}
         </form>
     );
 }

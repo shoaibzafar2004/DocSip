@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreMessageRequest;
 use App\Models\Conversation;
 use App\Services\AnswerService;
+use App\Services\ConversationTitleService;
 use App\Services\DocumentQueryService;
 use App\Services\EmbeddingService;
 use Illuminate\Http\JsonResponse;
@@ -14,7 +15,8 @@ class MessageController extends Controller
     public function __construct(
         protected DocumentQueryService $documentQueryService,
         protected EmbeddingService $embeddingService,
-        protected AnswerService $answerService
+        protected AnswerService $answerService,
+        protected ConversationTitleService $titleService,
     ) {}
 
     public function store(StoreMessageRequest $request, Conversation $conversation): JsonResponse
@@ -27,7 +29,7 @@ class MessageController extends Controller
             'embedding' => $embedding[0],
         ]);
 
-        if ($conversation->messages()->count() > 1 && !$conversation->title) {
+        if ($conversation->messages()->count() === 1 && ! $conversation->title) {
             $title = $this->titleService->generate($message->content);
             $conversation->update(['title' => $title]);
         }
@@ -42,6 +44,7 @@ class MessageController extends Controller
         ]);
 
         return response()->json([
+            'title' => $conversation->title,
             'userMessage' => $message,
             'assistantMessage' => $assistantMessage,
         ], 201);

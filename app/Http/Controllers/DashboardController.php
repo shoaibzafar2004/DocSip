@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\DocumentStatus;
 use App\Services\DocumentService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -19,10 +20,11 @@ class DashboardController extends Controller
 
         $stats = [
             'total' => $documents->count(),
-            'ready' => $documents->where('status', 'ready')->count(),
-            'processing' => $documents->where('status', 'processing')->count(),
-            'uploaded' => $documents->where('status', 'uploaded')->count(),
-            'failed' => $documents->where('status', 'failed')->count(),
+            'ready' => $documents->where('status', DocumentStatus::Ready)->count(),
+            'pendingApproval' => $documents->where('status', DocumentStatus::PendingApproval)->count(),
+            'processing' => $documents->where('status', DocumentStatus::Processing)->count(),
+            'uploaded' => $documents->where('status', DocumentStatus::Uploaded)->count(),
+            'failed' => $documents->where('status', DocumentStatus::Failed)->count(),
         ];
 
         return Inertia::render('dashboard', [

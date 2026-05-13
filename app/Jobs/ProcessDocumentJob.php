@@ -9,6 +9,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+use App\Enums\DocumentStatus;
 
 class ProcessDocumentJob implements ShouldQueue
 {
@@ -26,7 +27,7 @@ class ProcessDocumentJob implements ShouldQueue
     public function handle(PdfExtractionService $pdfExtractor, DocumentChunkStorageService $chunkStorage): void
     {
         $this->document->update([
-            'status' => 'processing',
+            'status' => DocumentStatus::Processing,
             'status_message' => $this->attempts() > 1
                 ? 'Retrying... (attempt '.$this->attempts().' of '.$this->tries.')'
                 : null,
@@ -36,7 +37,7 @@ class ProcessDocumentJob implements ShouldQueue
             $content = $pdfExtractor->extract($path);
         } catch (\Exception $e) {
             $this->document->update([
-                'status' => 'failed',
+                'status' => DocumentStatus::Failed,
                 'status_message' => 'Could not read this PDF. Remove it and try a different file.',
             ]);
             Log::error('Text extraction failed', ['document_id' => $this->document->id, 'error' => $e->getMessage()]);
@@ -48,12 +49,12 @@ class ProcessDocumentJob implements ShouldQueue
         if (strlen(trim($content)) > 50) {
             $chunkStorage->store($this->document, $content);
             $this->document->update([
-                'status' => 'ready',
+                'status' => DocumentStatus::PendingApproval,
                 'status_message' => null,
             ]);
         } else {
             $this->document->update([
-                'status' => 'failed',
+                'status' => DocumentStatus::Failed,
                 'status_message' => 'This PDF has no readable text. Remove it and try again.',
             ]);
             Log::error('Processing failed: Extracted content is too short', ['document_id' => $this->document->id]);
@@ -63,12 +64,12 @@ class ProcessDocumentJob implements ShouldQueue
 
     public function failed(\Throwable $exception): void
     {
-        if ($this->document->fresh()->status === 'failed') {
+        if ($this->document->fresh()->status === DocumentStatus::Failed) {
             return;
         }
 
         $this->document->update([
-            'status' => 'failed',
+            'status' => DocumentStatus::Failed,
             'status_message' => 'Processing failed after multiple retries. Remove this file and upload it again.',
         ]);
         Log::error('Document processing permanently failed after all retries', [

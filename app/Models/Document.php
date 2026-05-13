@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use App\Enums\DocumentStatus;
 
 class Document extends Model
 {
@@ -22,6 +23,12 @@ class Document extends Model
         'mime_type',
         'status',
         'status_message',
+        'ocr_confidence',
+        'extraction_method',
+    ];
+
+    protected $casts = [
+        'status' => DocumentStatus::class,
     ];
 
     public function user(): BelongsTo

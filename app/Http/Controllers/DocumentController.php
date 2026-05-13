@@ -7,8 +7,12 @@ use App\Actions\UploadDocumentAction;
 use App\Enums\DocumentStatus;
 use App\Http\Requests\StoreDocumentRequest;
 use App\Models\Document;
+use App\Services\DocumentChunkStorageService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class DocumentController extends Controller
 {
@@ -45,8 +49,20 @@ class DocumentController extends Controller
         ]);
     }
 
-    public function approve(Document $document): RedirectResponse
+    public function file(Document $document): StreamedResponse
     {
+        return Storage::disk('local')->response($document->path, $document->name);
+    }
+
+    public function approve(Document $document, Request $request, DocumentChunkStorageService $chunkStorage): RedirectResponse
+    {
+        $text = trim($request->string('text')->toString());
+
+        if ($text !== '') {
+            $document->chunks()->delete();
+            $chunkStorage->store($document, $text);
+        }
+
         $document->update(['status' => DocumentStatus::Ready]);
 
         return back();

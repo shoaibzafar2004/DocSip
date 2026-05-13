@@ -9,7 +9,7 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
-import { approve, preview } from '@/routes/documents';
+import { approve, file, preview } from '@/routes/documents';
 import type { Document } from '@/types';
 
 interface PreviewData {
@@ -30,6 +30,8 @@ export function DocumentPreviewModal({
     onClose,
 }: DocumentPreviewModalProps) {
     const [data, setData] = useState<PreviewData | null>(null);
+    const [editedText, setEditedText] = useState<string | null>(null);
+    const [isEditing, setIsEditing] = useState(false);
 
     useEffect(() => {
         if (!open || !document) {
@@ -48,7 +50,19 @@ export function DocumentPreviewModal({
 
     const handleClose = () => {
         setData(null);
+        setEditedText(null);
+        setIsEditing(false);
         onClose();
+    };
+
+    const handleStartEditing = () => {
+        setEditedText(data?.text ?? '');
+        setIsEditing(true);
+    };
+
+    const handleCancelEditing = () => {
+        setEditedText(null);
+        setIsEditing(false);
     };
 
     const handleApprove = () => {
@@ -56,7 +70,11 @@ export function DocumentPreviewModal({
             return;
         }
 
-        router.post(approve.url(document.id), {}, { onSuccess: handleClose });
+        router.post(
+            approve.url(document.id),
+            editedText !== null ? { text: editedText } : {},
+            { onSuccess: handleClose },
+        );
     };
 
     const isLoading = open && !data;
@@ -66,9 +84,12 @@ export function DocumentPreviewModal({
         data?.ocrConfidence !== undefined &&
         data.ocrConfidence < 70;
 
+    const isImage = document?.mimeType.startsWith('image/');
+    const fileUrl = document ? file.url(document.id) : null;
+
     return (
         <Dialog open={open} onOpenChange={(isOpen) => !isOpen && handleClose()}>
-            <DialogContent className="flex max-h-[80vh] max-w-2xl flex-col">
+            <DialogContent className="flex max-h-[85vh] max-w-5xl flex-col sm:max-w-5xl">
                 <DialogHeader>
                     <DialogTitle className="flex items-center gap-3">
                         {document?.name}
@@ -84,7 +105,9 @@ export function DocumentPreviewModal({
                             data?.ocrConfidence !== undefined && (
                                 <Badge
                                     variant={
-                                        lowConfidence ? 'destructive' : 'default'
+                                        lowConfidence
+                                            ? 'destructive'
+                                            : 'default'
                                     }
                                     className="text-xs"
                                 >
@@ -94,26 +117,69 @@ export function DocumentPreviewModal({
                     </DialogTitle>
                 </DialogHeader>
 
-                <div className="min-h-0 flex-1 overflow-y-auto rounded-md border bg-muted/30 p-4">
-                    {isLoading && (
-                        <div className="flex h-32 items-center justify-center text-sm text-muted-foreground">
-                            Loading preview...
-                        </div>
-                    )}
-                    {data && (
-                        <pre className="whitespace-pre-wrap font-sans text-sm leading-relaxed">
-                            {data.text || 'No text could be extracted.'}
-                        </pre>
-                    )}
+                <div className="grid min-h-0 flex-1 grid-cols-2 gap-4">
+                    <div className="flex min-h-0 flex-col overflow-hidden rounded-md border bg-muted/30">
+                        {fileUrl && isImage && (
+                            <img
+                                src={fileUrl}
+                                alt={document?.name}
+                                className="h-full w-full object-contain"
+                            />
+                        )}
+                        {fileUrl && !isImage && (
+                            <iframe
+                                src={fileUrl}
+                                title={document?.name}
+                                className="h-full w-full"
+                            />
+                        )}
+                    </div>
+
+                    <div className="min-h-0 overflow-y-auto rounded-md border bg-muted/30 p-4">
+                        {isLoading && (
+                            <div className="flex h-32 items-center justify-center text-sm text-muted-foreground">
+                                Loading preview...
+                            </div>
+                        )}
+                        {data && isEditing && (
+                            <textarea
+                                className="h-full w-full resize-none rounded-md border bg-background p-2 font-mono text-sm"
+                                value={editedText ?? ''}
+                                onChange={(e) => setEditedText(e.target.value)}
+                            />
+                        )}
+                        {data && !isEditing && (
+                            <pre className="font-sans text-sm leading-relaxed whitespace-pre-wrap">
+                                {data.text || 'No text could be extracted.'}
+                            </pre>
+                        )}
+                    </div>
                 </div>
 
                 {lowConfidence && (
                     <p className="text-sm text-muted-foreground">
-                        Confidence is low — consider using AI for better results.
+                        Confidence is low — consider using AI for better
+                        results.
                     </p>
                 )}
 
                 <DialogFooter className="gap-2">
+                    {!isEditing ? (
+                        <Button
+                            variant="outline"
+                            onClick={handleStartEditing}
+                        >
+                            Edit Text
+                        </Button>
+                    ) : (
+                        <Button
+                            variant="outline"
+                            onClick={handleCancelEditing}
+                        >
+                            Cancel Edit
+                        </Button>
+                    )}
+
                     <Button variant="outline" onClick={handleClose}>
                         Close
                     </Button>

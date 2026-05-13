@@ -43,6 +43,7 @@ class DocumentService
                 'name' => $document->name,
                 'status' => $document->status,
                 'statusMessage' => $document->status_message,
+                'mimeType' => $document->mime_type,
                 'createdAt' => $document->created_at->diffForHumans(),
             ]);
     }

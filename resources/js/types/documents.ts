@@ -3,6 +3,7 @@ export interface Document {
     name: string;
     status: 'uploaded' | 'processing' | 'pending_approval' | 'ready' | 'failed';
     statusMessage?: string;
+    mimeType: string;
     createdAt: string;
 }
 

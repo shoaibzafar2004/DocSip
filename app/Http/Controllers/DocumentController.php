@@ -6,6 +6,7 @@ use App\Actions\DeleteDocumentAction;
 use App\Actions\UploadDocumentAction;
 use App\Enums\DocumentStatus;
 use App\Http\Requests\StoreDocumentRequest;
+use App\Jobs\ReprocessWithAiJob;
 use App\Models\Document;
 use App\Services\DocumentChunkStorageService;
 use Illuminate\Http\JsonResponse;
@@ -64,6 +65,18 @@ class DocumentController extends Controller
         }
 
         $document->update(['status' => DocumentStatus::Ready]);
+
+        return back();
+    }
+
+    public function reprocess(Document $document): RedirectResponse
+    {
+        $document->update([
+            'status' => DocumentStatus::Processing,
+            'status_message' => null,
+        ]);
+
+        ReprocessWithAiJob::dispatch($document);
 
         return back();
     }

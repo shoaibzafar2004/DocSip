@@ -9,7 +9,7 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
-import { approve, file, preview } from '@/routes/documents';
+import { approve, file, preview, reprocess } from '@/routes/documents';
 import type { Document } from '@/types';
 
 interface PreviewData {
@@ -65,6 +65,14 @@ export function DocumentPreviewModal({
         setIsEditing(false);
     };
 
+    const handleReprocess = () => {
+        if (!document) {
+            return;
+        }
+
+        router.post(reprocess.url(document.id), {}, { onSuccess: handleClose });
+    };
+
     const handleApprove = () => {
         if (!document) {
             return;
@@ -89,7 +97,7 @@ export function DocumentPreviewModal({
 
     return (
         <Dialog open={open} onOpenChange={(isOpen) => !isOpen && handleClose()}>
-            <DialogContent className="flex max-h-[85vh] max-w-5xl flex-col sm:max-w-5xl">
+            <DialogContent className="flex h-[85vh] max-w-5xl flex-col sm:max-w-5xl">
                 <DialogHeader>
                     <DialogTitle className="flex items-center gap-3">
                         {document?.name}
@@ -117,8 +125,8 @@ export function DocumentPreviewModal({
                     </DialogTitle>
                 </DialogHeader>
 
-                <div className="grid min-h-0 flex-1 grid-cols-2 gap-4">
-                    <div className="flex min-h-0 flex-col overflow-hidden rounded-md border bg-muted/30">
+                <div className="grid min-h-0 flex-1 grid-cols-2 gap-4 overflow-hidden">
+                    <div className="flex flex-col overflow-hidden rounded-md border bg-muted/30">
                         {fileUrl && isImage && (
                             <img
                                 src={fileUrl}
@@ -135,7 +143,7 @@ export function DocumentPreviewModal({
                         )}
                     </div>
 
-                    <div className="min-h-0 overflow-y-auto rounded-md border bg-muted/30 p-4">
+                    <div className="flex min-h-0 flex-col rounded-md border bg-muted/30">
                         {isLoading && (
                             <div className="flex h-32 items-center justify-center text-sm text-muted-foreground">
                                 Loading preview...
@@ -143,15 +151,17 @@ export function DocumentPreviewModal({
                         )}
                         {data && isEditing && (
                             <textarea
-                                className="h-full w-full resize-none rounded-md border bg-background p-2 font-mono text-sm"
+                                className="min-h-0 flex-1 resize-none bg-transparent p-4 font-mono text-sm outline-none"
                                 value={editedText ?? ''}
                                 onChange={(e) => setEditedText(e.target.value)}
                             />
                         )}
                         {data && !isEditing && (
-                            <pre className="font-sans text-sm leading-relaxed whitespace-pre-wrap">
-                                {data.text || 'No text could be extracted.'}
-                            </pre>
+                            <div className="min-h-0 flex-1 overflow-y-auto p-4">
+                                <pre className="whitespace-pre-wrap font-sans text-sm leading-relaxed">
+                                    {data.text || 'No text could be extracted.'}
+                                </pre>
+                            </div>
                         )}
                     </div>
                 </div>
@@ -184,7 +194,7 @@ export function DocumentPreviewModal({
                         Close
                     </Button>
                     {data?.extractionMethod === 'tesseract' && (
-                        <Button variant="secondary" disabled>
+                        <Button variant="secondary" onClick={handleReprocess}>
                             Try with AI
                         </Button>
                     )}

@@ -17,6 +17,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('documents/{document}/preview', [DocumentController::class, 'preview'])->name('documents.preview');
     Route::get('documents/{document}/file', [DocumentController::class, 'file'])->name('documents.file');
     Route::post('documents/{document}/approve', [DocumentController::class, 'approve'])->name('documents.approve');
+    Route::post('documents/{document}/reprocess', [DocumentController::class, 'reprocess'])->name('documents.reprocess');
     Route::delete('documents/{document}', [DocumentController::class, 'destroy'])->name('documents.destroy');
 
     Route::get('/chat', [ConversationController::class, 'index'])->name('conversations');

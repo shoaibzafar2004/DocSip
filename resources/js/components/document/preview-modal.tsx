@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import {
     Dialog,
     DialogContent,
+    DialogDescription,
     DialogFooter,
     DialogHeader,
     DialogTitle,
@@ -22,12 +23,14 @@ interface DocumentPreviewModalProps {
     document: Document | null;
     open: boolean;
     onClose: () => void;
+    cooldownLabel: string | null;
 }
 
 export function DocumentPreviewModal({
     document,
     open,
     onClose,
+    cooldownLabel,
 }: DocumentPreviewModalProps) {
     const [data, setData] = useState<PreviewData | null>(null);
     const [editedText, setEditedText] = useState<string | null>(null);
@@ -85,24 +88,6 @@ export function DocumentPreviewModal({
         );
     };
 
-    const aiCooldownLabel = (() => {
-        if (!document?.aiLastAttemptedAt) {
-            return null;
-        }
-
-        const attemptedAt = new Date(document.aiLastAttemptedAt);
-        const retryAt = new Date(attemptedAt.getTime() + 2 * 60 * 60 * 1000);
-        const remaining = retryAt.getTime() - Date.now();
-
-        if (remaining <= 0) {
-            return null;
-        }
-
-        const hours = Math.floor(remaining / (1000 * 60 * 60));
-        const minutes = Math.floor((remaining % (1000 * 60 * 60)) / (1000 * 60));
-
-        return hours > 0 ? `Try again in ${hours}h ${minutes}m` : `Try again in ${minutes}m`;
-    })();
 
     const isLoading = open && !data;
 
@@ -142,6 +127,9 @@ export function DocumentPreviewModal({
                                 </Badge>
                             )}
                     </DialogTitle>
+                    <DialogDescription className="sr-only">
+                        Review extracted text and approve or edit before making the document available for chat.
+                    </DialogDescription>
                 </DialogHeader>
 
                 <div className="grid min-h-0 flex-1 grid-cols-2 gap-4 overflow-hidden">
@@ -217,9 +205,9 @@ export function DocumentPreviewModal({
                             <Button
                                 variant="secondary"
                                 onClick={handleReprocess}
-                                disabled={aiCooldownLabel !== null}
+                                disabled={cooldownLabel !== null}
                             >
-                                {aiCooldownLabel ?? 'Try with AI'}
+                                {cooldownLabel ?? 'Try with AI'}
                             </Button>
                         )}
                     <Button onClick={handleApprove}>Approve</Button>

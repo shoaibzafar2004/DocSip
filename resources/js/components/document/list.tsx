@@ -22,8 +22,32 @@ interface DocumentListProps {
     documents: Document[];
 }
 
+function computeCooldownLabel(aiLastAttemptedAt: string | null): string | null {
+    if (!aiLastAttemptedAt) {
+        return null;
+    }
+
+    const retryAt = new Date(new Date(aiLastAttemptedAt).getTime() + 2 * 60 * 60 * 1000);
+    const remaining = retryAt.getTime() - Date.now();
+
+    if (remaining <= 0) {
+        return null;
+    }
+
+    const hours = Math.floor(remaining / (1000 * 60 * 60));
+    const minutes = Math.floor((remaining % (1000 * 60 * 60)) / (1000 * 60));
+
+    return hours > 0 ? `Try again in ${hours}h ${minutes}m` : `Try again in ${minutes}m`;
+}
+
 export function DocumentList({ documents }: DocumentListProps) {
     const [previewDoc, setPreviewDoc] = useState<Document | null>(null);
+    const [cooldownLabel, setCooldownLabel] = useState<string | null>(null);
+
+    const handleOpenPreview = (doc: Document) => {
+        setPreviewDoc(doc);
+        setCooldownLabel(computeCooldownLabel(doc.aiLastAttemptedAt));
+    };
 
     if (documents.length === 0) {
         return (
@@ -84,7 +108,7 @@ export function DocumentList({ documents }: DocumentListProps) {
                                 <Button
                                     variant="outline"
                                     size="icon"
-                                    onClick={() => setPreviewDoc(doc)}
+                                    onClick={() => handleOpenPreview(doc)}
                                 >
                                     <ScanSearch className="h-4 w-4" />
                                 </Button>
@@ -132,6 +156,7 @@ export function DocumentList({ documents }: DocumentListProps) {
                 document={previewDoc}
                 open={previewDoc !== null}
                 onClose={() => setPreviewDoc(null)}
+                cooldownLabel={cooldownLabel}
             />
         </>
     );

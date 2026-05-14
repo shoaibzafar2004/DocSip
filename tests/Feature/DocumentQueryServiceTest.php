@@ -71,7 +71,7 @@ class DocumentQueryServiceTest extends TestCase
         $this->assertNotContains('Other document content.', $result);
     }
 
-    public function test_returns_at_most_five_chunks(): void
+    public function test_returns_at_most_ten_chunks(): void
     {
         $user = User::factory()->create();
         $conversation = Conversation::factory()->for($user)->create();
@@ -80,7 +80,7 @@ class DocumentQueryServiceTest extends TestCase
 
         $embedding = new Vector(array_fill(0, 768, 0.5));
 
-        foreach (range(0, 9) as $i) {
+        foreach (range(0, 14) as $i) {
             DocumentChunk::factory()->for($document)->create([
                 'chunk_index' => $i,
                 'embedding' => $embedding,
@@ -94,6 +94,6 @@ class DocumentQueryServiceTest extends TestCase
 
         $result = (new DocumentQueryService)->query($message);
 
-        $this->assertLessThanOrEqual(5, count($result));
+        $this->assertLessThanOrEqual(10, count($result));
     }
 }

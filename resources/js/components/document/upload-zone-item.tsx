@@ -4,19 +4,11 @@ import type { UploadItem } from '@/types/documents';
 interface UploadZoneItemProps {
     upload: UploadItem;
     onDismiss: (id: string) => void;
-    key: string;
 }
 
-export function UploadZoneItem({
-    upload,
-    onDismiss,
-    key,
-}: UploadZoneItemProps) {
+export function UploadZoneItem({ upload, onDismiss }: UploadZoneItemProps) {
     return (
-        <div
-            key={key}
-            className="flex items-center gap-3 rounded-lg border border-sidebar-border/70 px-3 py-2.5 dark:border-sidebar-border"
-        >
+        <div className="flex items-center gap-3 rounded-lg border border-sidebar-border/70 px-3 py-2.5 dark:border-sidebar-border">
             <div className="flex min-w-0 flex-1 flex-col gap-1">
                 <div className="flex items-center justify-between gap-2">
                     <span className="truncate text-sm font-medium">

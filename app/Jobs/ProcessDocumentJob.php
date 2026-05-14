@@ -19,6 +19,8 @@ class ProcessDocumentJob implements ShouldQueue
 
     public int $tries = 3;
 
+    public int $timeout = 900;
+
     public function backoff(): array
     {
         return [30, 60, 120];

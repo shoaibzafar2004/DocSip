@@ -19,6 +19,8 @@ class ReprocessWithAiJob implements ShouldQueue
 
     public int $tries = 2;
 
+    public int $timeout = 600;
+
     public function backoff(): array
     {
         return [60, 120];

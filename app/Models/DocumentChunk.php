@@ -32,6 +32,7 @@ use Pgvector\Laravel\Vector;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|DocumentChunk whereId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|DocumentChunk whereMetadata($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|DocumentChunk whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|DocumentChunk whereIn(string $column, mixed $values, string $boolean = 'and', bool $not = false)
  * @mixin \Eloquent
  */
 class DocumentChunk extends Model

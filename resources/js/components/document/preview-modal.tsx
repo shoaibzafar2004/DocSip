@@ -85,6 +85,25 @@ export function DocumentPreviewModal({
         );
     };
 
+    const aiCooldownLabel = (() => {
+        if (!document?.aiLastAttemptedAt) {
+            return null;
+        }
+
+        const attemptedAt = new Date(document.aiLastAttemptedAt);
+        const retryAt = new Date(attemptedAt.getTime() + 2 * 60 * 60 * 1000);
+        const remaining = retryAt.getTime() - Date.now();
+
+        if (remaining <= 0) {
+            return null;
+        }
+
+        const hours = Math.floor(remaining / (1000 * 60 * 60));
+        const minutes = Math.floor((remaining % (1000 * 60 * 60)) / (1000 * 60));
+
+        return hours > 0 ? `Try again in ${hours}h ${minutes}m` : `Try again in ${minutes}m`;
+    })();
+
     const isLoading = open && !data;
 
     const lowConfidence =
@@ -193,11 +212,16 @@ export function DocumentPreviewModal({
                     <Button variant="outline" onClick={handleClose}>
                         Close
                     </Button>
-                    {data?.extractionMethod === 'tesseract' && (
-                        <Button variant="secondary" onClick={handleReprocess}>
-                            Try with AI
-                        </Button>
-                    )}
+                    {data?.extractionMethod === 'tesseract' &&
+                        document?.status === 'pending_approval' && (
+                            <Button
+                                variant="secondary"
+                                onClick={handleReprocess}
+                                disabled={aiCooldownLabel !== null}
+                            >
+                                {aiCooldownLabel ?? 'Try with AI'}
+                            </Button>
+                        )}
                     <Button onClick={handleApprove}>Approve</Button>
                 </DialogFooter>
             </DialogContent>

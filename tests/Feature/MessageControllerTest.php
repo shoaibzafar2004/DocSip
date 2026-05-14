@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Conversation;
+use App\Models\Document;
 use App\Models\User;
 use App\Services\AnswerService;
 use App\Services\DocumentQueryService;
@@ -59,6 +60,7 @@ class MessageControllerTest extends TestCase
     {
         $user = User::factory()->create();
         $conversation = Conversation::factory()->for($user)->create();
+        $conversation->documents()->attach(Document::factory()->ready()->for($user)->create());
 
         $this->actingAs($user)->postJson(route('messages.store', $conversation), [
             'content' => 'What is in the document?',
@@ -75,6 +77,7 @@ class MessageControllerTest extends TestCase
     {
         $user = User::factory()->create();
         $conversation = Conversation::factory()->for($user)->create();
+        $conversation->documents()->attach(Document::factory()->ready()->for($user)->create());
 
         $this->actingAs($user)->postJson(route('messages.store', $conversation), [
             'content' => 'What is in the document?',
@@ -91,6 +94,7 @@ class MessageControllerTest extends TestCase
     {
         $user = User::factory()->create();
         $conversation = Conversation::factory()->for($user)->create();
+        $conversation->documents()->attach(Document::factory()->ready()->for($user)->create());
 
         $response = $this->actingAs($user)->postJson(route('messages.store', $conversation), [
             'content' => 'What is in the document?',
@@ -107,10 +111,23 @@ class MessageControllerTest extends TestCase
     {
         $user = User::factory()->create();
         $conversation = Conversation::factory()->for($user)->create();
+        $conversation->documents()->attach(Document::factory()->ready()->for($user)->create());
 
         $response = $this->actingAs($user)->postJson(route('messages.store', $conversation), []);
 
         $response->assertUnprocessable();
         $response->assertJsonValidationErrors(['content']);
+    }
+
+    public function test_locked_conversation_returns_403(): void
+    {
+        $user = User::factory()->create();
+        $conversation = Conversation::factory()->for($user)->create();
+
+        $response = $this->actingAs($user)->postJson(route('messages.store', $conversation), [
+            'content' => 'What is in the document?',
+        ]);
+
+        $response->assertForbidden();
     }
 }

@@ -79,7 +79,8 @@ export function DocumentList({ documents }: DocumentListProps) {
                                           : 'Uploaded'}
                             </Badge>
 
-                            {doc.status === 'pending_approval' && (
+                            {(doc.status === 'pending_approval' ||
+                                doc.status === 'failed') && (
                                 <Button
                                     variant="outline"
                                     size="icon"

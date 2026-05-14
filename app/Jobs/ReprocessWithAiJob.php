@@ -56,13 +56,9 @@ class ReprocessWithAiJob implements ShouldQueue
 
     public function failed(\Throwable $exception): void
     {
-        if ($this->document->fresh()->status === DocumentStatus::Failed) {
-            return;
-        }
-
         $this->document->update([
-            'status' => DocumentStatus::Failed,
-            'status_message' => 'AI extraction failed after retries. Remove the file and try again.',
+            'status' => DocumentStatus::PendingApproval,
+            'status_message' => 'AI extraction is temporarily unavailable. Your extracted text is still available to review and approve. Try again in 2 hours.',
         ]);
         Log::error('ReprocessWithAiJob permanently failed', [
             'document_id' => $this->document->id,

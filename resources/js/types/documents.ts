@@ -4,6 +4,7 @@ export interface Document {
     status: 'uploaded' | 'processing' | 'pending_approval' | 'ready' | 'failed';
     statusMessage?: string;
     mimeType: string;
+    aiLastAttemptedAt: string | null;
     createdAt: string;
 }
 

@@ -9,12 +9,14 @@ interface MessageInputProps {
     conversationId: number;
     onMessages: (userMessage: Message, assistantMessage: Message) => void;
     onTitle?: (title: string) => void;
+    isLocked?: boolean;
 }
 
 export default function MessageInput({
     conversationId,
     onMessages,
     onTitle,
+    isLocked = false,
 }: MessageInputProps) {
     const [content, setContent] = useState('');
     const [loading, setLoading] = useState(false);
@@ -57,6 +59,17 @@ export default function MessageInput({
             e.preventDefault();
             handleSubmit(e);
         }
+    }
+
+    if (isLocked) {
+        return (
+            <div className="border-t p-4">
+                <p className="text-center text-sm text-muted-foreground">
+                    This conversation is locked because all attached documents
+                    have been deleted.
+                </p>
+            </div>
+        );
     }
 
     return (

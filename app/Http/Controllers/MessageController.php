@@ -22,6 +22,10 @@ class MessageController extends Controller
     public function store(StoreMessageRequest $request, Conversation $conversation): JsonResponse
     {
         $this->authorize('view', $conversation);
+
+        if ($conversation->documents()->doesntExist()) {
+            return response()->json(['message' => 'This conversation is locked because all documents have been deleted.'], 403);
+        }
         $embedding = $this->embeddingService->embedMany([$request->content]);
         $message = $conversation->messages()->create([
             'content' => $request->content,

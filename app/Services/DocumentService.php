@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Enums\DocumentStatus;
 use App\Models\Document;
 use App\Models\User;
 use Illuminate\Http\UploadedFile;
@@ -44,15 +45,15 @@ class DocumentService
                 'status' => $document->status,
                 'statusMessage' => $document->status_message,
                 'mimeType' => $document->mime_type,
+                'aiLastAttemptedAt' => $document->ai_last_attempted_at?->toISOString(),
                 'createdAt' => $document->created_at->diffForHumans(),
             ]);
     }
 
-    public function getReadyDocuments(): Collection
+    public function getReadyDocuments(User $user): Collection
     {
-        return auth()->user()
-            ->documents()
-            ->where('status', 'ready')
+        return $user->documents()
+            ->where('status', DocumentStatus::Ready)
             ->get(['id', 'name']);
     }
 }

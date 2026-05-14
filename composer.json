@@ -22,6 +22,7 @@
         "thiagoalessio/tesseract_ocr": "^2.13"
     },
     "require-dev": {
+        "barryvdh/laravel-ide-helper": "^3.7",
         "fakerphp/faker": "^1.24",
         "laravel/boost": "^2.2",
         "laravel/pail": "^1.2.5",
@@ -81,7 +82,9 @@
         ],
         "post-update-cmd": [
             "@php artisan vendor:publish --tag=laravel-assets --ansi --force",
-            "@php artisan boost:update --ansi"
+            "@php artisan boost:update --ansi",
+            "@php artisan ide-helper:generate --ansi",
+            "@php artisan ide-helper:models --write --ansi"
         ],
         "post-root-package-install": [
             "@php -r \"file_exists('.env') || copy('.env.example', '.env');\""

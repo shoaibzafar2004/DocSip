@@ -16,12 +16,14 @@ interface ChatShowProps {
     conversation: Conversation;
     messages: Message[];
     attachedDocuments: AttachedDocument[];
+    isLocked: boolean;
 }
 
 export default function ChatShow({
     conversation,
     messages: initialMessages,
     attachedDocuments,
+    isLocked,
 }: ChatShowProps) {
     const [messages, setMessages] = useState<Message[]>(initialMessages);
     const [title, setTitle] = useState(conversation.title);
@@ -87,6 +89,7 @@ export default function ChatShow({
                     conversationId={conversation.id}
                     onMessages={handleMessages}
                     onTitle={handleTitle}
+                    isLocked={isLocked}
                 />
             </div>
         </>

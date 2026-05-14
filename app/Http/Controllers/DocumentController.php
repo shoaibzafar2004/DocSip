@@ -13,7 +13,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
-use Symfony\Component\HttpFoundation\StreamedResponse;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class DocumentController extends Controller
 {
@@ -50,9 +50,9 @@ class DocumentController extends Controller
         ]);
     }
 
-    public function file(Document $document): StreamedResponse
+    public function file(Document $document): BinaryFileResponse
     {
-        return Storage::disk('local')->response($document->path, $document->name);
+        return response()->file(Storage::disk('local')->path($document->path));
     }
 
     public function approve(Document $document, Request $request, DocumentChunkStorageService $chunkStorage): RedirectResponse
@@ -71,9 +71,17 @@ class DocumentController extends Controller
 
     public function reprocess(Document $document): RedirectResponse
     {
+        if (
+            $document->ai_last_attempted_at &&
+            $document->ai_last_attempted_at->diffInHours(now()) < 2
+        ) {
+            return back()->withErrors(['ai' => 'AI extraction was recently attempted. Please try again later.']);
+        }
+
         $document->update([
             'status' => DocumentStatus::Processing,
             'status_message' => null,
+            'ai_last_attempted_at' => now(),
         ]);
 
         ReprocessWithAiJob::dispatch($document);

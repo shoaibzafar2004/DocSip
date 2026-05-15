@@ -7,6 +7,8 @@ use Illuminate\Support\Facades\DB;
 
 class DocumentChunkStorageService
 {
+    private const BATCH_SIZE = 50;
+
     public function __construct(
         protected DocumentChunkingService $chunkingService,
         protected EmbeddingService $embeddingService
@@ -15,15 +17,20 @@ class DocumentChunkStorageService
     public function store(Document $document, string $content): void
     {
         $chunks = $this->chunkingService->chunk($content);
-        $embeddings = $this->embeddingService->embedMany($chunks);
-        DB::transaction(function () use ($document, $chunks, $embeddings) {
-            foreach ($chunks as $index => $chunk) {
-                $document->chunks()->create([
-                    'chunk_index' => $index,
-                    'content' => $chunk,
-                    'embedding' => $embeddings[$index],
-                ]);
-            }
-        });
+
+        foreach (array_chunk($chunks, self::BATCH_SIZE) as $batchIndex => $batch) {
+            $embeddings = $this->embeddingService->embedMany($batch);
+            $startIndex = $batchIndex * self::BATCH_SIZE;
+
+            DB::transaction(function () use ($document, $batch, $embeddings, $startIndex) {
+                foreach ($batch as $i => $chunk) {
+                    $document->chunks()->create([
+                        'chunk_index' => $startIndex + $i,
+                        'content' => $chunk,
+                        'embedding' => $embeddings[$i],
+                    ]);
+                }
+            });
+        }
     }
 }

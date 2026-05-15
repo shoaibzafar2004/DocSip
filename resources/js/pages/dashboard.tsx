@@ -1,4 +1,5 @@
 import { Head, usePoll } from '@inertiajs/react';
+import { useEffect } from 'react';
 import { DocumentList } from '@/components/document/list';
 import { DocumentStats } from '@/components/document/stats';
 import { DocumentUploadZone } from '@/components/document/upload-zone';
@@ -10,6 +11,7 @@ interface DashboardProps {
     stats: {
         total: number;
         ready: number;
+        pendingApproval: number;
         processing: number;
         uploaded: number;
         failed: number;
@@ -18,13 +20,28 @@ interface DashboardProps {
 
 export default function Dashboard({
     documents = [],
-    stats = { total: 0, ready: 0, processing: 0, uploaded: 0, failed: 0 },
+    stats = {
+        total: 0,
+        ready: 0,
+        pendingApproval: 0,
+        processing: 0,
+        uploaded: 0,
+        failed: 0,
+    },
 }: DashboardProps) {
     const hasPending = documents.some(
         (doc) => doc.status === 'uploaded' || doc.status === 'processing',
     );
 
-    usePoll(3000, { only: ['documents', 'stats'] }, { autoStart: hasPending });
+    const { start, stop } = usePoll(3000, { only: ['documents', 'stats'] }, { autoStart: false });
+
+    useEffect(() => {
+        if (hasPending) {
+            start();
+        } else {
+            stop();
+        }
+    }, [hasPending, start, stop]);
 
     return (
         <>
@@ -35,6 +52,7 @@ export default function Dashboard({
                     total={stats.total}
                     ready={stats.ready}
                     processing={stats.processing}
+                    pendingApproval={stats.pendingApproval}
                     uploaded={stats.uploaded}
                     failed={stats.failed}
                 />

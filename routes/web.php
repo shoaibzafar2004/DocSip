@@ -14,6 +14,10 @@ Route::inertia('/', 'welcome', [
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::post('documents', [DocumentController::class, 'store'])->name('documents.store');
+    Route::get('documents/{document}/preview', [DocumentController::class, 'preview'])->name('documents.preview');
+    Route::get('documents/{document}/file', [DocumentController::class, 'file'])->name('documents.file');
+    Route::post('documents/{document}/approve', [DocumentController::class, 'approve'])->name('documents.approve');
+    Route::post('documents/{document}/reprocess', [DocumentController::class, 'reprocess'])->name('documents.reprocess');
     Route::delete('documents/{document}', [DocumentController::class, 'destroy'])->name('documents.destroy');
 
     Route::get('/chat', [ConversationController::class, 'index'])->name('conversations');

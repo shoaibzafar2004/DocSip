@@ -8,6 +8,7 @@ use App\Models\Conversation;
 use App\Services\ConversationService;
 use App\Services\DocumentService;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -19,19 +20,19 @@ class ConversationController extends Controller
         protected DocumentService $documentService
     ) {}
 
-    public function index(): Response
+    public function index(Request $request): Response
     {
-        $user = auth()->user();
+        $user = $request->user();
 
         return Inertia::render('chat', [
             'conversations' => $this->conversationService->getForSidebar($user),
-            'readyDocuments' => $this->documentService->getReadyDocuments(),
+            'readyDocuments' => $this->documentService->getReadyDocuments($user),
         ]);
     }
 
     public function store(StoreConversationRequest $request): RedirectResponse
     {
-        $user = auth()->user();
+        $user = $request->user();
         $documentIds = $request->document_ids;
         $documents = $user->documents()
             ->whereIn('id', $documentIds)
@@ -47,7 +48,7 @@ class ConversationController extends Controller
         return redirect()->route('conversations.show', $conversation);
     }
 
-    public function show(Conversation $conversation): Response
+    public function show(Conversation $conversation, Request $request): Response
     {
         $this->authorize('view', $conversation);
         $conversation = $this->conversationService->getWithMessages($conversation);
@@ -56,7 +57,8 @@ class ConversationController extends Controller
             'conversation' => $conversation,
             'messages' => $conversation->messages,
             'attachedDocuments' => $conversation->documents,
-            'readyDocuments' => $this->documentService->getReadyDocuments(),
+            'isLocked' => $conversation->documents->isEmpty(),
+            'readyDocuments' => $this->documentService->getReadyDocuments($request->user()),
         ]);
     }
 

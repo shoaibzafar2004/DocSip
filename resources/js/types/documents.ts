@@ -1,8 +1,10 @@
 export interface Document {
     id: number;
     name: string;
-    status: 'uploaded' | 'processing' | 'ready' | 'failed';
+    status: 'uploaded' | 'processing' | 'pending_approval' | 'ready' | 'failed';
     statusMessage?: string;
+    mimeType: string;
+    aiLastAttemptedAt: string | null;
     createdAt: string;
 }
 

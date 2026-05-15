@@ -14,7 +14,7 @@ class DocumentQueryService
 
         return DocumentChunk::whereIn('document_id', $documentIds)
             ->nearestNeighbors('embedding', $message->embedding, Distance::Cosine)
-            ->take(5)
+            ->take(10)
             ->get()
             ->pluck('content')
             ->all();

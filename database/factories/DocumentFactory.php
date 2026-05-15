@@ -43,6 +43,11 @@ class DocumentFactory extends Factory
         return $this->state(['status' => 'ready']);
     }
 
+    public function pendingApproval(): static
+    {
+        return $this->state(['status' => 'pending_approval']);
+    }
+
     public function failed(): static
     {
         return $this->state(['status' => 'failed']);

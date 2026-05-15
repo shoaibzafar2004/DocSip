@@ -8,15 +8,21 @@ class EmbeddingService
 {
     public function embedMany(array $texts): array
     {
-        $response = Http::post(config('services.ollama.url').'/api/embed', [
-            'model' => 'nomic-embed-text',
-            'input' => $texts,
-        ]);
+        $embeddings = [];
 
-        if ($response->failed()) {
-            throw new \RuntimeException('Ollama embedding request failed: '.$response->body());
+        foreach (array_chunk($texts, 50) as $batch) {
+            $response = Http::timeout(120)->post(config('services.ollama.url').'/api/embed', [
+                'model' => 'nomic-embed-text',
+                'input' => $batch,
+            ]);
+
+            if ($response->failed()) {
+                throw new \RuntimeException('Ollama embedding request failed: '.$response->body());
+            }
+
+            $embeddings = array_merge($embeddings, $response->json('embeddings'));
         }
 
-        return $response->json('embeddings');
+        return $embeddings;
     }
 }

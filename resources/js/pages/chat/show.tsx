@@ -16,29 +16,41 @@ interface ChatShowProps {
     conversation: Conversation;
     messages: Message[];
     attachedDocuments: AttachedDocument[];
+    isLocked: boolean;
 }
 
 export default function ChatShow({
     conversation,
     messages: initialMessages,
     attachedDocuments,
+    isLocked,
 }: ChatShowProps) {
     const [messages, setMessages] = useState<Message[]>(initialMessages);
     const [title, setTitle] = useState(conversation.title);
+    const [streamingContent, setStreamingContent] = useState<string | null>(null);
     const bottomRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
-    }, [messages]);
+    }, [messages, streamingContent]);
 
-    function handleMessages(userMessage: Message, assistantMessage: Message) {
-        setMessages((prev) => [...prev, userMessage, assistantMessage]);
-    }
+    const handleUserMessage = (userMessage: Message, newTitle: string | null) => {
+        setMessages((prev) => [...prev, userMessage]);
 
-    function handleTitle(newTitle: string) {
-        setTitle(newTitle);
-        router.reload({ only: ['conversations'] });
-    }
+        if (newTitle && newTitle !== title) {
+            setTitle(newTitle);
+            router.reload({ only: ['conversations'] });
+        }
+    };
+
+    const handleChunk = (chunk: string) => {
+        setStreamingContent((prev) => (prev ?? '') + chunk);
+    };
+
+    const handleAssistantMessage = (assistantMessage: Message) => {
+        setMessages((prev) => [...prev, assistantMessage]);
+        setStreamingContent(null);
+    };
 
     return (
         <>
@@ -66,7 +78,7 @@ export default function ChatShow({
                 </div>
 
                 <div className="flex-1 overflow-y-auto px-4 py-4">
-                    {messages.length === 0 ? (
+                    {messages.length === 0 && streamingContent === null ? (
                         <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
                             Ask a question about your documents.
                         </div>
@@ -78,6 +90,17 @@ export default function ChatShow({
                                     message={message}
                                 />
                             ))}
+                            {streamingContent !== null && (
+                                <MessageBubble
+                                    key="streaming"
+                                    message={{
+                                        id: -1,
+                                        role: 'assistant',
+                                        content: streamingContent,
+                                        createdAt: '',
+                                    }}
+                                />
+                            )}
                             <div ref={bottomRef} />
                         </div>
                     )}
@@ -85,8 +108,10 @@ export default function ChatShow({
 
                 <MessageInput
                     conversationId={conversation.id}
-                    onMessages={handleMessages}
-                    onTitle={handleTitle}
+                    onUserMessage={handleUserMessage}
+                    onChunk={handleChunk}
+                    onAssistantMessage={handleAssistantMessage}
+                    isLocked={isLocked}
                 />
             </div>
         </>

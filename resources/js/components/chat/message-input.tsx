@@ -1,21 +1,23 @@
 import { SendHorizontal } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { apiFetch } from '@/lib/api';
+import { getCsrfToken } from '@/lib/api';
 import { store } from '@/routes/messages';
 import type { Message } from '@/types/conversations';
 
 interface MessageInputProps {
     conversationId: number;
-    onMessages: (userMessage: Message, assistantMessage: Message) => void;
-    onTitle?: (title: string) => void;
+    onUserMessage: (userMessage: Message, title: string | null) => void;
+    onChunk: (chunk: string) => void;
+    onAssistantMessage: (assistantMessage: Message) => void;
     isLocked?: boolean;
 }
 
 export default function MessageInput({
     conversationId,
-    onMessages,
-    onTitle,
+    onUserMessage,
+    onChunk,
+    onAssistantMessage,
     isLocked = false,
 }: MessageInputProps) {
     const [content, setContent] = useState('');
@@ -33,22 +35,64 @@ export default function MessageInput({
         setError(null);
 
         try {
-            const response = await apiFetch(store(conversationId).url, {
+            const response = await fetch(store(conversationId).url, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    Accept: 'text/event-stream',
+                    'X-XSRF-TOKEN': getCsrfToken(),
+                },
                 body: JSON.stringify({ content }),
             });
 
-            if (!response.ok) {
+            if (!response.ok || !response.body) {
                 setError('Something went wrong. Please try again.');
 
                 return;
             }
 
-            const data = await response.json();
-            onMessages(data.userMessage, data.assistantMessage);
-            onTitle?.(data.title);
             setContent('');
+
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder();
+            let buffer = '';
+
+            while (true) {
+                const { done, value } = await reader.read();
+
+                if (done) {
+                    break;
+                }
+
+                buffer += decoder.decode(value, { stream: true });
+
+                const lines = buffer.split('\n');
+
+                buffer = lines.pop() ?? '';
+
+                for (const line of lines) {
+                    if (!line.startsWith('data: ')) {
+                        continue;
+                    }
+
+                    const event = JSON.parse(line.slice(6)) as {
+                        type: string;
+                        message?: Message;
+                        title?: string | null;
+                        content?: string;
+                    };
+
+                    if (event.type === 'user' && event.message) {
+                        onUserMessage(event.message, event.title ?? null);
+                    } else if (event.type === 'chunk' && event.content) {
+                        onChunk(event.content);
+                    } else if (event.type === 'done' && event.message) {
+                        onAssistantMessage(event.message);
+                    }
+                }
+            }
+        } catch {
+            setError('Something went wrong. Please try again.');
         } finally {
             setLoading(false);
         }
